@@ -1,0 +1,503 @@
+<template>
+  <div class="app-container">
+    <!-- 添加或修改用户配置对话框 -->
+    <el-steps :active="active" finish-status="success" simple>
+      <el-step @click="openSetp(0)" :status="activeStatus[0]" title="租赁类型" class="stepSuc"></el-step>
+      <el-step @click="openSetp(1)" :status="activeStatus[1]" title="房源信息" class="stepSuc"></el-step>
+      <el-step @click="openSetp(2)" :status="activeStatus[2]" title="居室信息" class="stepSuc"></el-step>
+      <el-step @click="openSetp(3)" :status="activeStatus[3]" title="附加信息" class="stepSuc"></el-step>
+    </el-steps>
+    <div v-show="stepShowStatus[0]">
+      <div style="margin-top: 50px;"></div>
+      <el-form :model="houseLeaseTypeForm" ref="form0" label-width="120px">
+        <el-row>
+          <el-col :span="18">
+            <el-form-item label="租赁类型" prop="type">
+              <el-radio-group v-model="houseLeaseTypeForm.type">
+                <el-radio :value="1">整租</el-radio>
+                <el-radio :value="2">合租</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </div>
+    <div v-show="stepShowStatus[1]">
+      <div style="margin-top: 50px;"></div>
+      <el-form :model="houseInfoForm" ref="form1" label-width="120px">
+        <el-row>
+          <el-col :span="18">
+            <el-form-item label="房源图片" prop="houseImgList">
+              <el-upload list-type="picture-card" v-model:file-list="houseInfoForm.houseImgList" action="#"
+                :http-request="uploadOss">
+                <el-icon>
+                  <Plus />
+                </el-icon>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="所在小区" prop="village">
+              <el-input v-model="houseInfoForm.village" placeholder="请选择所在小区" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="所在楼号" prop="buildingNum">
+              <el-input v-model="houseInfoForm.buildingNum" placeholder="请输入楼号" maxlength="30" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="所在单元" prop="houseUnit">
+              <el-input v-model="houseInfoForm.houseUnit" placeholder="请输入楼栋" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="总楼层数" prop="totalFloor">
+              <el-input v-model="houseInfoForm.totalFloor" placeholder="请输入总楼层数" maxlength="30" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+
+        </el-row>
+        <el-row>
+          <el-form-item label="所在楼层">
+            <el-col :span="3">
+              <el-form-item prop="houseNum">
+                <el-input v-model="houseInfoForm.houseFloor" placeholder="楼层" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="1"></el-col>
+            <el-col :span="2">层</el-col>
+            <el-col :span="3">
+              <el-form-item prop="houseNum">
+                <el-input v-model="houseInfoForm.houseNum" placeholder="房号" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="13">
+              <el-form-item label="朝向" prop="direction">
+                <el-checkbox-group v-model="houseInfoForm.direction">
+                  <el-checkbox value="东">东</el-checkbox>
+                  <el-checkbox value="西">西</el-checkbox>
+                  <el-checkbox value="南">南</el-checkbox>
+                  <el-checkbox value="北">北</el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+            </el-col>
+          </el-form-item>
+        </el-row>
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="建筑面积(m²)" prop="area">
+              <el-input v-model="houseInfoForm.area" placeholder="请输入建筑面积" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="套内面积(m²)" prop="useArea">
+              <el-input v-model="houseInfoForm.useArea" placeholder="请输入套内面积" maxlength="30" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-form-item label="户型信息" required>
+            <el-col :span="3">
+              <el-form-item prop="bedroomCount">
+                <el-input v-model="houseInfoForm.bedroomCount" placeholder="卧室" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="1"></el-col>
+            <el-col :span="1">室</el-col>
+            <el-col :span="3">
+              <el-form-item prop="cookroomCount">
+                <el-input v-model="houseInfoForm.cookroomCount" placeholder="客厅" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="1"></el-col>
+            <el-col :span="1">厅</el-col>
+            <el-col :span="3">
+              <el-form-item prop="parlourCount">
+                <el-input v-model="houseInfoForm.parlourCount" placeholder="厨房" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="1"></el-col>
+            <el-col :span="1">厨</el-col>
+            <el-col :span="3">
+              <el-form-item prop="washroomNum">
+                <el-input v-model="houseInfoForm.washroomNum" placeholder="卫生间" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="1"></el-col>
+            <el-col :span="1">卫</el-col>
+          </el-form-item>
+        </el-row>
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="收房价格" prop="costAmount">
+              <el-input v-model="houseInfoForm.costAmount" placeholder="请输入收房价格" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="收房时间" prop="startTime">
+              <el-input v-model="houseInfoForm.startTime" placeholder="请输入收房时间" maxlength="30" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="22">
+            <el-form-item label="代理有效期" prop="endTime">
+              <el-date-picker v-model="houseInfoForm.endTime" type="daterange" range-separator="至"
+                start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </div>
+    <div v-show="stepShowStatus[2]">
+      <div style=" margin-top: 50px;"></div>
+      <el-form :model="roomInfoForm" ref="form2" label-width="120px">
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="卧室号" prop="number">
+              <el-input v-model="roomInfoForm.number" placeholder="请输入卧室编号" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="服务费(元)" prop="bedroom.serviceAmoun">
+              <el-input v-model="roomInfoForm.serviceAmount" placeholder="请输入服务费" maxlength="30" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="使用面积(m²)" prop="useArea">
+              <el-input v-model="roomInfoForm.useArea" placeholder="请输入使用面积" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="租金(元)" prop="houseUnit">
+              <el-input v-model="roomInfoForm.houseUnit" placeholder="请输入租金" maxlength="30" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="朝向" prop="direction">
+              <el-checkbox-group v-model="roomInfoForm.direction">
+                <el-checkbox value="东">东</el-checkbox>
+                <el-checkbox value="西">西</el-checkbox>
+                <el-checkbox value="南">南</el-checkbox>
+                <el-checkbox value="北">北</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="11">
+            <el-form-item label="付款方式" prop="payType">
+              <el-radio-group v-model="roomInfoForm.payType">
+                <el-radio :value="1">押一付一</el-radio>
+                <el-radio :value="2">押一付三</el-radio>
+                <el-radio :value="3">押一付六</el-radio>
+                <el-radio :value="4">押一付全年</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="22">
+            <el-form-item label="物品配置" prop="fitment">
+              <el-checkbox-group v-model="roomInfoForm.fitment">
+                <el-checkbox value="1.5米床">1.5米床</el-checkbox>
+                <el-checkbox value="1.5米床垫">1.5米床垫</el-checkbox>
+                <el-checkbox value="1.8米床">1.8米床</el-checkbox>
+                <el-checkbox value="1.8米床垫">1.8米床垫</el-checkbox>
+                <el-checkbox value="单开门衣柜">单开门衣柜</el-checkbox>
+                <el-checkbox value="双开门衣柜">双开门衣柜</el-checkbox>
+                <el-checkbox value="书桌">书桌</el-checkbox>
+                <el-checkbox value="椅子">椅子</el-checkbox>
+                <el-checkbox value="空调">空调</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </div>
+    <div v-show="stepShowStatus[3]">
+      <div style="margin-top: 50px;"></div>
+      <el-form :model="housePropertyForm" ref="form3" label-width="120px">
+        <el-row>
+          <el-col :span="9">
+            <el-form-item label="梯户比" prop="tihubi">
+              <el-input v-model="housePropertyForm.tihubi" placeholder="请输入梯户比" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="9">
+            <el-form-item label="供暖方式">
+              <el-radio-group v-model="housePropertyForm.heatingMode">
+                <el-radio value="无">无</el-radio>
+                <el-radio value="市政供暖">市政供暖</el-radio>
+                <el-radio value="自采暖">自采暖</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="9">
+            <el-form-item label="房屋年限" prop="houseAge">
+              <el-input v-model="housePropertyForm.houseAge" placeholder="请输入房屋年限" maxlength="30" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="9">
+            <el-form-item label="电梯" prop="lift">
+              <el-checkbox-group v-model="housePropertyForm.lift">
+                <el-checkbox value="有">有</el-checkbox>
+                <el-checkbox value="无">无</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="18">
+            <el-form-item label="家电配套" prop="fitmentConfig">
+              <el-checkbox-group v-model="housePropertyForm.fitmentConfig">
+                <el-checkbox value="冰箱">冰箱</el-checkbox>
+                <el-checkbox value="洗衣机">洗衣机</el-checkbox>
+                <el-checkbox value="沙发">沙发</el-checkbox>
+                <el-checkbox value="茶几">茶几</el-checkbox>
+                <el-checkbox value="燃气热水器">燃气热水器</el-checkbox>
+                <el-checkbox value="电热水器">电热水器</el-checkbox>
+                <el-checkbox value="油烟机">油烟机</el-checkbox>
+                <el-checkbox value="燃气灶">燃气灶</el-checkbox>
+                <el-checkbox value="电磁炉">电磁炉"</el-checkbox>
+                <el-checkbox value="微波炉">微波炉</el-checkbox>
+                <el-checkbox value="空调">空调</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </div>
+    <div class="dialog-footer">
+      <el-button type="primary" @click="submitForm">确 定</el-button>
+      <el-button @click="cancel">取 消</el-button>
+    </div>
+  </div>
+</template>
+
+<script setup name="addLease">
+import { reactive } from "vue";
+
+const router = useRouter();
+const { proxy } = getCurrentInstance();
+
+const active = ref(0);
+const activeStatus = ref(['process', 'wait', 'wait', 'wait']);
+const stepShowStatus = ref([true, false, false, false]);
+
+const data = reactive({
+  //表单一
+  houseLeaseTypeForm: {
+    type: 1
+  },
+  //表单二
+  houseInfoForm: {
+    //编号
+    id: null,
+    //图片列表
+    imgList: [],
+    //小区
+    village: '',
+    //楼号
+    buildingNum: '',
+    //单元
+    houseUnit: '',
+    //总楼层
+    totalFloor: '',
+    //楼层
+    houseFloor: '',
+    //房号
+    HouseCount: '',
+    //建筑面积
+    area: '',
+    //套内面积
+    useArea: '',
+    //卧室数量
+    bedroomCount: '',
+    //厨房数量
+    cookroomCount: '',
+    //客厅数量
+    parlourCount: '',
+    //卫生间数量
+    washroomNum: '',
+    //收房价格
+    costAmount: '',
+    //收房时间
+    startTime: '',
+    //代理有效期
+    endTime: ['2024-03-22', '2024-03-24'],
+    //朝向
+    direction: [],
+    //租赁类型
+    type: 1
+  },
+  //表单三
+  roomInfoForm: {
+    //卧室号
+    number: '',
+    //朝向
+    direction: [],
+    //使用面积
+    useArea: '',
+    //租金
+    houseUnit: '',
+    //服务费
+    serviceAmount: '',
+    //付款方式
+    payType: undefined,
+    //物品配置
+    fitment: [],
+  },
+  housePropertyForm: {
+    //梯户比
+    tihubi: '',
+    //房屋年限
+    houseAge: '',
+    //电梯
+    lift: null,
+    //供暖方式
+    heatingMode: 0,
+    //物品配置
+    fitmentConfig: [],
+
+  },
+  queryParams: {
+    pageNum: 1,
+    pageSize: 10,
+    name: undefined,
+  },
+  rules: {
+    'houseLeaseTypeFormRules': {
+      // 'type': [{ required: true, message: "请选择租赁类型", trigger: "blur" }],
+    },
+    'houseInfoFormRules': {
+
+    },
+    'roomInfoFormRules': {
+
+    },
+    'housePropertyFormRules': {
+
+    },
+  }
+});
+
+const { houseLeaseTypeForm, houseInfoForm, roomInfoForm, housePropertyForm, queryParams, form, rules } = toRefs(data);
+
+function openSetp(nextIndex) {
+  let formName = '';
+  switch (active.value) {
+    case 0:
+      formName = 'form0';
+      break;
+    case 1:
+      formName = 'form1';
+      break;
+    case 2:
+      formName = 'form2';
+      break;
+    case 3:
+      formName = 'form3';
+      break;
+    default: return;
+
+  }
+  //校验当前表单是否正常
+  proxy.$refs[formName].validate(valid => {
+    if (!valid) {
+      console.log('表单校验状态', valid)
+      return false;
+    }
+    //校验通过，当前步骤条状态为成功
+    activeStatus.value[active.value] = "success";
+    //设置当前步骤条对应表单为关闭
+    stepShowStatus.value[active.value] = false;
+    //设置下一个步骤条状态为process
+    activeStatus.value[nextIndex] = "process";
+    //设置步骤条为下一个步骤索引
+    active.value = nextIndex;
+    //设置当前步骤条对就表单打开
+    stepShowStatus.value[nextIndex] = true;
+  });
+};
+/** 搜索按钮操作 */
+function handleQuery() {
+  queryParams.value.pageNum = 1;
+};
+/** 重置按钮操作 */
+function resetQuery() {
+  proxy.resetForm("queryRef");
+  handleQuery();
+};
+/** 重置操作表单 */
+function reset() {
+  proxy.resetForm("form0");
+  proxy.resetForm("form1");
+  proxy.resetForm("form2");
+  proxy.resetForm("form3");
+};
+/** 取消按钮 */
+function cancel() {
+  open.value = false;
+  reset();
+}
+function uploadOss(option) {
+
+}
+/** 提交按钮 */
+function submitForm() {
+  proxy.$refs["form0"].validate(valid => {
+    if (valid) {
+      proxy.$tab.closePage();
+      // if (form.value.id != null) {
+      //   //TODO 调用更新门店接口
+      //   updateStore(form.value).then(response => {
+      //     proxy.$modal.msgSuccess("修改成功");
+      //     open.value = false;
+      //     getList();
+      //   });
+      // } else {
+      //   //TODO 调用新增门店接口
+      //   addStore(form.value).then(response => {
+      //     proxy.$modal.msgSuccess("新增成功");
+      //     open.value = false;
+      //     getList();
+      //   });
+      // }
+    }
+  });
+};
+</script>
+
+<style scoped lang="scss">
+.stepSuc :hover {
+  cursor: pointer;
+}
+
+::v-deep(.el-upload--picture-card) {
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+}
+
+::v-deep(.el-upload-list--picture-card .el-upload-list__item) {
+  width: 80px !important;
+  height: 80px !important;
+}
+
+::v-deep(.el-upload-list--picture-card .el-upload-list__item-thumbnail) {
+  width: 80px !important;
+  height: auto !important;
+}
+</style>
